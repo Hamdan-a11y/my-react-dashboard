@@ -948,6 +948,335 @@
 }
 
 /* ==========================================================================
+   Telemetry Security Controls & Password Modal
+   ========================================================================== */
+.telemetry-security-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.telemetry-security-header h4 {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  letter-spacing: -0.01em;
+}
+
+.telemetry-security-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.security-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 14px;
+  background: var(--toggle-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--duration-quick) var(--ease-smooth);
+}
+
+.security-action-btn:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  border-color: var(--border-highlight);
+  transform: translateY(-1px);
+}
+
+.security-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.security-notice-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 12px;
+  line-height: 1.4;
+  animation: modalFadeIn 0.2s var(--ease-smooth);
+}
+
+/* Security Modal Backdrop & Dialog */
+.security-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: modalFadeIn 0.2s var(--ease-smooth);
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.security-modal-dialog {
+  background: var(--bg-card-solid);
+  border: 1px solid var(--border-highlight);
+  border-radius: 18px;
+  padding: 24px 26px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 48px -8px rgba(0, 0, 0, 0.75), 0 0 0 1px var(--border-color);
+  animation: modalPop 0.25s var(--ease-entrance);
+  color: var(--text-primary);
+}
+
+@keyframes modalPop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.security-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.security-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.security-modal-title h3 {
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.security-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--duration-quick);
+}
+
+.security-modal-close:hover {
+  background: var(--toggle-bg);
+}
+
+.security-modal-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.security-modal-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  margin-bottom: 16px;
+  animation: modalFadeIn 0.2s;
+}
+
+.security-modal-alert.error {
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.28);
+  color: var(--text-primary);
+}
+
+.security-modal-alert.success {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  color: var(--text-primary);
+}
+
+.security-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.security-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.security-form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.security-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 13.5px;
+  font-family: inherit;
+  transition: all var(--duration-quick) var(--ease-smooth);
+}
+
+.security-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+
+.security-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-security-cancel {
+  padding: 9px 15px;
+  border-radius: 9px;
+  background: var(--toggle-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--duration-quick) var(--ease-smooth);
+}
+
+.btn-security-cancel:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  border-color: var(--border-highlight);
+}
+
+.btn-security-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 9px;
+  background: #ffffff;
+  border: 1px solid #ffffff;
+  color: #09090b;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--duration-quick) var(--ease-smooth);
+}
+
+[data-theme='light'] .btn-security-submit {
+  background: #09090b;
+  border: 1px solid #09090b;
+  color: #ffffff;
+}
+
+.btn-security-submit:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.btn-security-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Password Strength Indicator inside modal */
+.password-strength-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.strength-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+
+.strength-meta-label {
+  color: var(--text-primary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.strength-status-text {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.strength-bars-track {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  height: 4px;
+}
+
+.strength-segment {
+  background: var(--toggle-bg);
+  border-radius: 2px;
+  transition: background 0.2s ease;
+}
+
+.strength-segment.tier-1 {
+  background: #f43f5e;
+}
+
+.strength-segment.tier-2 {
+  background: #fb923c;
+}
+
+.strength-segment.tier-3 {
+  background: #facc15;
+}
+
+.strength-segment.tier-4 {
+  background: #22c55e;
+}
+
+/* ==========================================================================
    Mobile Ergonomics & Responsive Breakpoints (< 640px)
    ========================================================================== */
 @media (max-width: 640px) {

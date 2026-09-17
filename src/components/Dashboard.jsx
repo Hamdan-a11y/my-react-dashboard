@@ -21,8 +21,12 @@ import {
   X,
   Pencil,
   Check,
-  CheckCheck
+  CheckCheck,
+  KeyRound,
+  Smartphone,
+  CheckCircle
 } from 'lucide-react'
+import { sanitizeInput, calculatePasswordStrength } from '../utils/security'
 
 function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
   const [tasks, setTasks] = useState([])
@@ -42,6 +46,17 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
 
   // ⚡ Batch Action Loading State
   const [isBatchOperating, setIsBatchOperating] = useState(false)
+
+  // 🛡️ Security State & Modals
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordChangeLoading, setPasswordChangeLoading] = useState(false)
+  const [passwordChangeMsg, setPasswordChangeMsg] = useState(null)
+  const [signoutOthersLoading, setSignoutOthersLoading] = useState(false)
+  const [signoutOthersMsg, setSignoutOthersMsg] = useState('')
+
+  const passwordStrength = calculatePasswordStrength(newPassword)
 
   const userId = session?.user?.id
   const userEmail = session?.user?.email || ''
@@ -111,12 +126,13 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
     }
   }, [userId])
 
-  // 2. Add real task to Supabase
+  // 2. Add real task to Supabase (with XSS sanitization)
   const handleAddTask = async (e) => {
     e.preventDefault()
     if (!newTaskInput.trim() || isSubmitting) return
 
-    const taskText = newTaskInput.trim()
+    const taskText = sanitizeInput(newTaskInput.trim())
+    if (!taskText) return
     setNewTaskInput('')
     setIsSubmitting(true)
     setErrorMessage('')
@@ -211,9 +227,9 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
     setEditingTaskText('')
   }
 
-  // 7. ✏️ Save Edited Task to Supabase
+  // 7. ✏️ Save Edited Task to Supabase (with XSS sanitization)
   const saveEditing = async (id) => {
-    const trimmed = editingTaskText.trim()
+    const trimmed = sanitizeInput(editingTaskText.trim())
     if (!trimmed) return
 
     const originalText = tasks.find(t => t.id === id)?.text
@@ -301,6 +317,75 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
       setErrorMessage(err.message)
     } finally {
       setIsBatchOperating(false)
+    }
+  }
+
+  // 🛡️ Security Action: Change Cloud Password
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault()
+    setPasswordChangeMsg(null)
+
+    if (newPassword.length < 8) {
+      setPasswordChangeMsg({
+        type: 'error',
+        text: 'New password must contain at least 8 characters.'
+      })
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordChangeMsg({
+        type: 'error',
+        text: 'Password confirmation does not match.'
+      })
+      return
+    }
+
+    setPasswordChangeLoading(true)
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword })
+      if (error) {
+        setPasswordChangeMsg({ type: 'error', text: error.message })
+      } else {
+        setPasswordChangeMsg({
+          type: 'success',
+          text: 'Your password has been securely updated.'
+        })
+        setNewPassword('')
+        setConfirmPassword('')
+        setTimeout(() => {
+          setShowPasswordModal(false)
+          setPasswordChangeMsg(null)
+        }, 2000)
+      }
+    } catch (err) {
+      setPasswordChangeMsg({
+        type: 'error',
+        text: err.message || 'Failed to update password.'
+      })
+    } finally {
+      setPasswordChangeLoading(false)
+    }
+  }
+
+  // 🛡️ Security Action: Sign out of other sessions
+  const handleSignoutOtherSessions = async () => {
+    setSignoutOthersLoading(true)
+    setSignoutOthersMsg('')
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'others' })
+      if (error) {
+        setSignoutOthersMsg(`Notice: ${error.message}`)
+      } else {
+        setSignoutOthersMsg('All other device sessions have been revoked.')
+      }
+    } catch (err) {
+      setSignoutOthersMsg('Failed to revoke other sessions.')
+    } finally {
+      setSignoutOthersLoading(false)
+      setTimeout(() => {
+        setSignoutOthersMsg('')
+      }, 5000)
     }
   }
 
@@ -762,6 +847,40 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
               </div>
             </div>
 
+            {/* 🛡️ Studio Security Section */}
+            <div className="telemetry-security-section">
+              <div className="telemetry-security-header">
+                <h4>Security Controls</h4>
+              </div>
+              <div className="telemetry-security-actions">
+                <button
+                  type="button"
+                  className="security-action-btn"
+                  onClick={() => setShowPasswordModal(true)}
+                  title="Update account credentials"
+                >
+                  <KeyRound size={14} />
+                  Change Password
+                </button>
+                <button
+                  type="button"
+                  className="security-action-btn"
+                  onClick={handleSignoutOtherSessions}
+                  disabled={signoutOthersLoading}
+                  title="Sign out of all other active browsers and devices"
+                >
+                  {signoutOthersLoading ? <Loader2 size={14} className="icon-spin" /> : <Smartphone size={14} />}
+                  Revoke Other Sessions
+                </button>
+              </div>
+              {signoutOthersMsg && (
+                <div className="security-notice-banner">
+                  <CheckCircle size={13} />
+                  <span>{signoutOthersMsg}</span>
+                </div>
+              )}
+            </div>
+
             <div className="telemetry-footer-note">
               <Clock size={13} />
               <span>End-to-end encrypted session</span>
@@ -769,6 +888,129 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
           </div>
         </div>
       </div>
+
+      {/* 🛡️ Change Password Modal Dialog */}
+      {showPasswordModal && (
+        <div className="security-modal-backdrop" onClick={() => setShowPasswordModal(false)}>
+          <div 
+            className="security-modal-dialog" 
+            onClick={(e) => e.stopPropagation()} 
+            role="dialog" 
+            aria-modal="true"
+            aria-labelledby="security-modal-title"
+          >
+            <div className="security-modal-header">
+              <div className="security-modal-title" id="security-modal-title">
+                <KeyRound size={18} />
+                <h3>Change Account Password</h3>
+              </div>
+              <button 
+                type="button" 
+                className="security-modal-close" 
+                onClick={() => {
+                  setShowPasswordModal(false)
+                  setPasswordChangeMsg(null)
+                  setNewPassword('')
+                  setConfirmPassword('')
+                }}
+                aria-label="Close modal"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <p className="security-modal-desc">
+              Create a new high-entropy password for your cloud account.
+            </p>
+
+            {passwordChangeMsg && (
+              <div className={`security-modal-alert ${passwordChangeMsg.type}`}>
+                {passwordChangeMsg.type === 'error' ? <AlertCircle size={15} /> : <CheckCircle size={15} />}
+                <span>{passwordChangeMsg.text}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleUpdatePassword} className="security-modal-form">
+              <div className="security-form-group">
+                <label htmlFor="new-password-input">New Password</label>
+                <input
+                  id="new-password-input"
+                  type="password"
+                  className="security-input"
+                  placeholder="Enter new password (min. 8 characters)"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  disabled={passwordChangeLoading}
+                  required
+                />
+              </div>
+
+              {newPassword.length > 0 && (
+                <div className="password-strength-container" style={{ margin: '4px 0 14px' }}>
+                  <div className="strength-header">
+                    <span className="strength-meta-label">Entropy</span>
+                    <span className="strength-status-text">{passwordStrength.label}</span>
+                  </div>
+                  <div className="strength-bars-track">
+                    {[1, 2, 3, 4].map(tier => (
+                      <div
+                        key={tier}
+                        className={`strength-segment ${
+                          tier <= passwordStrength.score ? `tier-${passwordStrength.score}` : ''
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="security-form-group">
+                <label htmlFor="confirm-password-input">Confirm New Password</label>
+                <input
+                  id="confirm-password-input"
+                  type="password"
+                  className="security-input"
+                  placeholder="Repeat new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={passwordChangeLoading}
+                  required
+                />
+              </div>
+
+              <div className="security-modal-actions">
+                <button
+                  type="button"
+                  className="btn-security-cancel"
+                  onClick={() => {
+                    setShowPasswordModal(false)
+                    setPasswordChangeMsg(null)
+                    setNewPassword('')
+                    setConfirmPassword('')
+                  }}
+                  disabled={passwordChangeLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-security-submit"
+                  disabled={passwordChangeLoading || newPassword.length < 8}
+                >
+                  {passwordChangeLoading ? (
+                    <>
+                      <Loader2 size={15} className="icon-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    'Update Password'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

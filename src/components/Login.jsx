@@ -9,10 +9,18 @@ import {
   Lock, 
   ArrowRight,
   Sun,
-  Moon
+  Moon,
+  ShieldCheck,
+  LockKeyhole
 } from 'lucide-react'
 import emailjs from '@emailjs/browser'
 import { supabase } from '../supabaseClient'
+import { 
+  getSecureItem, 
+  setSecureItem, 
+  removeSecureItem, 
+  calculatePasswordStrength 
+} from '../utils/security'
 import './Login.css'
 
 // Helper to translate cryptic/technical backend errors into user-friendly messages
@@ -54,14 +62,64 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
 
-  // 💾 Check if an email was previously remembered
-  const savedEmail = localStorage.getItem('rememberedEmail') || ''
+  // 🛡️ Encrypted client-side storage
+  const savedEmail = getSecureItem('rememberedEmail') || ''
 
   const [email, setEmail] = useState(resetEmailFromUrl || savedEmail)
   const [password, setPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(Boolean(savedEmail))
   const [showPassword, setShowPassword] = useState(false)
+
+  // 🛡️ Brute-Force Rate Limiting & Cooldown Engine
+  const [failedAttempts, setFailedAttempts] = useState(() => {
+    return parseInt(sessionStorage.getItem('auth_failed_attempts') || '0', 10)
+  })
+  const [lockoutRemaining, setLockoutRemaining] = useState(0)
+
+  useEffect(() => {
+    const lockoutUntil = parseInt(sessionStorage.getItem('auth_lockout_until') || '0', 10)
+    const now = Date.now()
+    if (lockoutUntil > now) {
+      setLockoutRemaining(Math.ceil((lockoutUntil - now) / 1000))
+    }
+  }, [])
+
+  useEffect(() => {
+    if (lockoutRemaining <= 0) return
+    const timer = setInterval(() => {
+      setLockoutRemaining((prev) => {
+        if (prev <= 1) {
+          sessionStorage.removeItem('auth_lockout_until')
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [lockoutRemaining])
+
+  const recordFailedAttempt = () => {
+    const nextAttempts = failedAttempts + 1
+    setFailedAttempts(nextAttempts)
+    sessionStorage.setItem('auth_failed_attempts', String(nextAttempts))
+    if (nextAttempts >= 5) {
+      const lockoutExpiry = Date.now() + 60000 // 60s cooldown
+      sessionStorage.setItem('auth_lockout_until', String(lockoutExpiry))
+      setLockoutRemaining(60)
+    }
+  }
+
+  const resetFailedAttempts = () => {
+    setFailedAttempts(0)
+    setLockoutRemaining(0)
+    sessionStorage.removeItem('auth_failed_attempts')
+    sessionStorage.removeItem('auth_lockout_until')
+  }
+
+  // Real-time password evaluation
+  const activePassword = mode === 'forgot' ? newPassword : password
+  const passwordStrength = calculatePasswordStrength(activePassword)
 
   const [isSettingNewPassword, setIsSettingNewPassword] = useState(isDirectReset && !initialError)
   const [isSending, setIsSending] = useState(false)
@@ -131,6 +189,12 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
     setGeneralError('')
     setSuccess('')
 
+    // Check brute force lockout
+    if (lockoutRemaining > 0) {
+      setGeneralError(`Security cooldown active. Please wait ${lockoutRemaining} seconds before trying again.`)
+      return
+    }
+
     const errors = {}
 
     // 1. Validation: First name (signup mode)
@@ -138,7 +202,7 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
       errors.firstName = 'First name is required.'
     }
 
-    // 2. Validation: Email (all modes except direct reset password)
+    // 2. Validation: Email
     if (!isSettingNewPassword) {
       const trimmedEmail = email.trim()
       if (!trimmedEmail) {
@@ -148,7 +212,7 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
       }
     }
 
-    // 3. Validation: Password
+    // 3. Validation: Password & Entropy Enforcement (>= 8 chars)
     if (mode === 'login') {
       if (!password) {
         errors.password = 'Password is required.'
@@ -156,14 +220,18 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
     } else if (mode === 'signup') {
       if (!password) {
         errors.password = 'Password is required.'
-      } else if (password.length < 6) {
-        errors.password = 'Password must be at least 6 characters long.'
+      } else if (password.length < 8) {
+        errors.password = 'Password must be at least 8 characters long.'
+      } else if (passwordStrength.score < 2) {
+        errors.password = 'Password too weak. Please mix uppercase, numbers, and special characters.'
       }
     } else if (mode === 'forgot' && isSettingNewPassword) {
       if (!newPassword) {
         errors.newPassword = 'New password is required.'
-      } else if (newPassword.length < 6) {
-        errors.newPassword = 'Password must be at least 6 characters long.'
+      } else if (newPassword.length < 8) {
+        errors.newPassword = 'Password must be at least 8 characters long.'
+      } else if (passwordStrength.score < 2) {
+        errors.newPassword = 'Password too weak. Please mix uppercase, numbers, and special characters.'
       }
     }
 
@@ -174,11 +242,11 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
 
     setIsSending(true)
 
-    // Handle "Remember Me"
+    // Handle Encrypted "Remember Me"
     if (rememberMe && email.trim()) {
-      localStorage.setItem('rememberedEmail', email.trim())
+      setSecureItem('rememberedEmail', email.trim())
     } else {
-      localStorage.removeItem('rememberedEmail')
+      removeSecureItem('rememberedEmail')
     }
 
     try {
@@ -188,7 +256,10 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
           password,
         })
         if (signInError) {
+          recordFailedAttempt()
           setGeneralError(getFriendlyErrorMessage(signInError))
+        } else {
+          resetFailedAttempts()
         }
       } else if (mode === 'signup') {
         const fullName = `${firstName.trim()} ${lastName.trim()}`.trim()
@@ -206,6 +277,8 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
           setGeneralError(getFriendlyErrorMessage(signUpError))
         } else if (signUpData?.user && !signUpData.session) {
           setSuccess('Account registered! Please check your email inbox to verify your account.')
+        } else {
+          resetFailedAttempts()
         }
       } else if (mode === 'forgot') {
         if (isSettingNewPassword) {
@@ -216,6 +289,7 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
           if (updateError) {
             setGeneralError(getFriendlyErrorMessage(updateError))
           } else {
+            resetFailedAttempts()
             setSuccess('Password updated successfully! Logging you in...')
             setTimeout(() => {
               if (onPasswordResetComplete) {
@@ -445,13 +519,23 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
                 </button>
               </div>
 
-              {/* Real-time Password Strength Micro-Pill for Sign Up */}
+              {/* Real-time Password Strength Segmented Meter for Sign Up */}
               {mode === 'signup' && password.length > 0 && (
-                <div className="password-indicator-row">
-                  <span className={`pass-rule ${isSignupPasswordValid ? 'valid' : 'invalid'}`}>
-                    <CheckCircle2 size={12} />
-                    {isSignupPasswordValid ? 'Password meets requirements' : 'Minimum 6 characters required'}
-                  </span>
+                <div className="password-strength-container">
+                  <div className="password-strength-bar">
+                    {[1, 2, 3, 4].map((step) => (
+                      <div
+                        key={step}
+                        className={`strength-segment ${passwordStrength.score >= step ? `active tier-${passwordStrength.score}` : ''}`}
+                      />
+                    ))}
+                  </div>
+                  <div className="password-strength-labels">
+                    <span>Password Security:</span>
+                    <strong className={`tier-label tier-${passwordStrength.score}`}>
+                      {passwordStrength.label || 'Enter 8+ characters'}
+                    </strong>
+                  </div>
                 </div>
               )}
 
@@ -499,22 +583,34 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
             </div>
           )}
 
-          {/* Submit Button */}
+          {/* Lockout Warning Banner */}
+          {lockoutRemaining > 0 && (
+            <div className="auth-msg warning">
+              <ShieldCheck size={16} style={{ flexShrink: 0 }} />
+              <span>Brute-force protection active. Cooldown remaining: {lockoutRemaining}s</span>
+            </div>
+          )}
+
+          {/* Main Action Button */}
           <button 
             type="submit" 
             className="main-auth-btn"
-            disabled={isSending}
+            disabled={isSending || lockoutRemaining > 0}
           >
-            <span>
-              {isSending ? 'Authenticating...' : (
-                mode === 'signup' 
-                  ? 'Create Account' 
-                  : mode === 'login' 
-                    ? 'Sign In to Workspace' 
-                    : (!isSettingNewPassword ? 'Send Recovery Link' : 'Confirm New Password')
-              )}
-            </span>
-            {!isSending && <ArrowRight size={15} />}
+            {isSending ? (
+              <span>Processing...</span>
+            ) : lockoutRemaining > 0 ? (
+              <span>Locked ({lockoutRemaining}s)</span>
+            ) : (
+              <>
+                <span>
+                  {mode === 'login' && 'Sign In to Workspace'}
+                  {mode === 'signup' && 'Create Free Account'}
+                  {mode === 'forgot' && (isSettingNewPassword ? 'Update Password' : 'Send Recovery Link')}
+                </span>
+                <ArrowRight size={16} />
+              </>
+            )}
           </button>
 
           {/* Back to Login for Forgot Password Mode */}

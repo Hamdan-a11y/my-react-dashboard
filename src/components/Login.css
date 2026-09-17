@@ -207,28 +207,60 @@
   margin-bottom: 8px;
 }
 
-.pass-rule {
-  display: inline-flex;
-  align-items: center;
+/* Password Strength Segmented Meter */
+.password-strength-container {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
   gap: 6px;
+}
+
+.password-strength-bar {
+  display: flex;
+  gap: 5px;
+  width: 100%;
+}
+
+.strength-segment {
+  flex: 1;
+  height: 3px;
+  border-radius: 99px;
+  background: var(--border-color);
+  transition: background var(--duration-normal) var(--ease-smooth);
+}
+
+.strength-segment.active.tier-1 {
+  background: #ef4444;
+}
+
+.strength-segment.active.tier-2 {
+  background: #f59e0b;
+}
+
+.strength-segment.active.tier-3 {
+  background: #3b82f6;
+}
+
+.strength-segment.active.tier-4 {
+  background: #22c55e;
+}
+
+.password-strength-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 11.5px;
-  font-family: 'JetBrains Mono', monospace;
-  padding: 3px 8px;
-  border-radius: 6px;
-  transition: all var(--duration-quick) var(--ease-smooth);
+  color: var(--text-muted);
 }
 
-.pass-rule.valid {
-  background: rgba(16, 185, 129, 0.12);
-  color: var(--accent-emerald);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+.password-strength-labels .tier-label {
+  font-weight: 600;
 }
 
-.pass-rule.invalid {
-  background: rgba(245, 158, 11, 0.1);
-  color: var(--accent-amber);
-  border: 1px solid rgba(245, 158, 11, 0.2);
-}
+.tier-label.tier-1 { color: #ef4444; }
+.tier-label.tier-2 { color: #f59e0b; }
+.tier-label.tier-3 { color: #3b82f6; }
+.tier-label.tier-4 { color: #22c55e; }
 
 /* Field Error */
 .input-with-icon.has-error .auth-input-field {
@@ -440,13 +472,18 @@
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
+.auth-msg.warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fef08a;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
 /* ==========================================================================
    Light Mode Overrides for Login
    ========================================================================== */
 :root[data-theme="light"] .auth-page {
-  background-image: 
-    linear-gradient(rgba(248, 249, 250, 0.82), rgba(248, 249, 250, 0.94)),
-    url('../assets/auth-banner.jpg');
+  background-color: var(--bg-primary);
+  background-image: var(--bg-gradient);
 }
 
 :root[data-theme="light"] .auth-center-card {
@@ -516,6 +553,12 @@
   background: #f0fdf4;
   color: #166534;
   border-color: #bbf7d0;
+}
+
+:root[data-theme="light"] .auth-msg.warning {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fde68a;
 }
 
 /* ==========================================================================

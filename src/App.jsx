@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Dashboard from './components/Dashboard'
 import Login from './components/Login'
 import { supabase } from './supabaseClient'
@@ -9,6 +9,7 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false)
   const [initialError, setInitialError] = useState('')
+  const lastActivityRef = useRef(Date.now())
 
   // 🌓 Theme State (persisted in localStorage, auto-detects OS preference)
   const [theme, setTheme] = useState(() => {
@@ -28,6 +29,33 @@ function App() {
   const toggleTheme = () => {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))
   }
+
+  // 🛡️ Auto-Lock Session after 30 minutes of inactivity
+  useEffect(() => {
+    if (!session) return
+
+    lastActivityRef.current = Date.now()
+    const resetActivity = () => {
+      lastActivityRef.current = Date.now()
+    }
+
+    const events = ['mousemove', 'keydown', 'mousedown', 'touchstart', 'scroll']
+    events.forEach(event => window.addEventListener(event, resetActivity, { passive: true }))
+
+    const IDLE_LIMIT_MS = 30 * 60 * 1000 // 30 minutes
+    const interval = setInterval(() => {
+      if (Date.now() - lastActivityRef.current >= IDLE_LIMIT_MS) {
+        supabase.auth.signOut()
+        setSession(null)
+        setInitialError('Your session has timed out due to 30 minutes of inactivity. Please sign in again.')
+      }
+    }, 30000)
+
+    return () => {
+      events.forEach(event => window.removeEventListener(event, resetActivity))
+      clearInterval(interval)
+    }
+  }, [session])
 
   useEffect(() => {
     // Check if URL hash contains an error from Supabase redirect
