@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import './Dashboard.css'
 import { supabase } from '../supabaseClient'
 import { 
-  Zap, 
   LogOut, 
   ListTodo, 
   CheckCircle2, 
@@ -12,7 +11,6 @@ import {
   ShieldCheck, 
   Activity, 
   Calendar,
-  Sparkles,
   Loader2,
   AlertCircle,
   Clock,
@@ -23,8 +21,7 @@ import {
   X,
   Pencil,
   Check,
-  CheckCheck,
-  Radio
+  CheckCheck
 } from 'lucide-react'
 
 function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
@@ -351,11 +348,7 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
       {/* Precision Top Navigation Bar */}
       <nav className="dashboard-nav">
         <div className="nav-brand">
-          <div className="brand-icon">
-            <Zap size={18} />
-          </div>
           <span className="brand-name">React App-2</span>
-          <span className="brand-tag">v2.0 Workspace</span>
         </div>
 
         <div className="nav-user-area">
@@ -389,22 +382,8 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
         {/* Welcome Header */}
         <div className="welcome-header">
           <div className="welcome-title">
-            <div className="welcome-pill-sub">
-              <span className="welcome-pulse"></span>
-              Workspace Synced &bull; Realtime Active
-            </div>
-            <h1>
-              Welcome back, {user || 'User'}
-              <Sparkles size={20} className="sparkle-icon" />
-            </h1>
-            <p className="welcome-meta">
-              Authenticated session: <code>{userEmail}</code>
-            </p>
-          </div>
-
-          <div className="status-pill">
-            <Radio size={14} className="live-radio" />
-            <span>Supabase Cloud Connected</span>
+            <h1>Welcome back, {user || 'User'}</h1>
+            <p className="welcome-meta">{userEmail}</p>
           </div>
         </div>
 
@@ -435,13 +414,12 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
           </div>
         )}
 
-        {/* Asymmetrical Bento Grid (Design Variance 8) */}
+        {/* Asymmetrical Bento Grid */}
         <div className="stats-bento-grid">
-          {/* Hero Bento Item: Circular Progress Meter */}
+          {/* Bento Item 1: Circular Progress Meter */}
           <div className="bento-box hero-progress-card">
             <div className="bento-header">
               <span className="bento-label">Completion Velocity</span>
-              <span className="stat-tag positive">{completionRate}% Done</span>
             </div>
             
             <div className="hero-progress-body">
@@ -474,26 +452,21 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
 
               <div className="hero-progress-meta">
                 <div className="hero-stat-row">
-                  <span className="dot-indicator done"></span>
-                  <span className="hero-stat-text">Completed:</span>
+                  <span className="hero-stat-text">Completed</span>
                   <strong>{completedCount} tasks</strong>
                 </div>
                 <div className="hero-stat-row">
-                  <span className="dot-indicator pending"></span>
-                  <span className="hero-stat-text">Remaining:</span>
+                  <span className="hero-stat-text">Remaining</span>
                   <strong>{activeCount} tasks</strong>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Bento Item 2: Active Tasks Telemetry */}
+          {/* Bento Item 2: Active Tasks */}
           <div className="bento-box telemetry-box">
             <div className="bento-header">
-              <span className="bento-icon-box cyan">
-                <ListTodo size={18} />
-              </span>
-              <span className="bento-pill-tag">In Pipeline</span>
+              <span className="bento-label">Active Tasks</span>
             </div>
             <div className="bento-metric-block">
               <span className="bento-val">{activeCount}</span>
@@ -504,10 +477,7 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
           {/* Bento Item 3: Total Cloud Volume */}
           <div className="bento-box telemetry-box">
             <div className="bento-header">
-              <span className="bento-icon-box amber">
-                <TrendingUp size={18} />
-              </span>
-              <span className="bento-pill-tag">All-Time</span>
+              <span className="bento-label">Total Items</span>
             </div>
             <div className="bento-metric-block">
               <span className="bento-val">{tasks.length}</span>
@@ -522,13 +492,10 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
           <div className="panel-card tasks-primary-panel">
             <div className="panel-header">
               <div className="panel-header-left">
-                <h3>Cloud Task Engine</h3>
+                <h3>Tasks</h3>
                 <span className="panel-sub-count">
-                  {filteredTasks.length} {filteredTasks.length === 1 ? 'item' : 'items'} displayed
+                  {filteredTasks.length} {filteredTasks.length === 1 ? 'item' : 'items'}
                 </span>
-              </div>
-              <div className="keyboard-hint-pill">
-                <kbd>Double-click</kbd> to edit
               </div>
             </div>
 
@@ -746,12 +713,11 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
           <div className="panel-card activity-telemetry-panel">
             <div className="panel-header">
               <h3>System Telemetry</h3>
-              <span className="telemetry-live-badge">Online</span>
             </div>
 
             <div className="activity-list">
               <div className="activity-item">
-                <div className="activity-icon cyan">
+                <div className="activity-icon">
                   <UserCheck size={16} />
                 </div>
                 <div className="activity-info">
@@ -761,7 +727,7 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
               </div>
 
               <div className="activity-item">
-                <div className="activity-icon emerald">
+                <div className="activity-icon">
                   <ShieldCheck size={16} />
                 </div>
                 <div className="activity-info">
@@ -771,7 +737,7 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
               </div>
 
               <div className="activity-item">
-                <div className="activity-icon amber">
+                <div className="activity-icon">
                   <Calendar size={16} />
                 </div>
                 <div className="activity-info">
@@ -781,12 +747,12 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
               </div>
 
               <div className="activity-item">
-                <div className="activity-icon blue">
+                <div className="activity-icon">
                   <Activity size={16} />
                 </div>
                 <div className="activity-info">
                   <p>Real-time Replication</p>
-                  <span className="replication-badge">
+                  <span>
                     {tableMissing ? 'Schema Setup Pending' : 'Subscribed to WebSocket Stream'}
                   </span>
                 </div>
