@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import Dashboard from './components/Dashboard'
 import Login from './components/Login'
 import { supabase } from './supabaseClient'
-import { Zap, Sun, Moon } from 'lucide-react'
 import './App.css'
 
 function App() {
@@ -83,9 +82,9 @@ function App() {
         <div className="splash-glow"></div>
         <div className="splash-card">
           <div className="splash-icon-box">
-            <Zap size={32} />
+            <span style={{ fontSize: '20px', fontWeight: '800' }}>R2</span>
           </div>
-          <h2 className="splash-brand">my-react-app</h2>
+          <h2 className="splash-brand">React App-2</h2>
           <p className="splash-sub">Connecting to secure cloud services...</p>
           <div className="splash-progress-track">
             <div className="splash-progress-bar"></div>
@@ -116,32 +115,18 @@ function App() {
           toggleTheme={toggleTheme}
         />
       ) : (
-        <>
-          {/* Floating Theme Switch for Login & Forgot Password screens */}
-          <button
-            className="theme-toggle-floating"
-            onClick={toggleTheme}
-            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-            aria-label="Toggle theme"
-          >
-            {theme === 'dark' ? (
-              <Sun size={20} className="theme-icon" />
-            ) : (
-              <Moon size={20} className="theme-icon" />
-            )}
-          </button>
-
-          <Login
-            isRecoveryMode={isPasswordRecovery}
-            initialError={initialError}
-            onPasswordResetComplete={() => {
-              setIsPasswordRecovery(false)
-              setInitialError('')
-              // Clean up the URL hash/query
-              window.history.replaceState({}, document.title, window.location.pathname)
-            }}
-          />
-        </>
+        <Login
+          isRecoveryMode={isPasswordRecovery}
+          initialError={initialError}
+          theme={theme}
+          toggleTheme={toggleTheme}
+          onPasswordResetComplete={() => {
+            setIsPasswordRecovery(false)
+            setInitialError('')
+            // Clean up the URL hash/query
+            window.history.replaceState({}, document.title, window.location.pathname)
+          }}
+        />
       )}
     </div>
   )

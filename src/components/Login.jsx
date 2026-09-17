@@ -7,7 +7,9 @@ import {
   User, 
   Mail, 
   Lock, 
-  ArrowRight
+  ArrowRight,
+  Sun,
+  Moon
 } from 'lucide-react'
 import emailjs from '@emailjs/browser'
 import { supabase } from '../supabaseClient'
@@ -42,7 +44,7 @@ const getFriendlyErrorMessage = (rawError) => {
   return msg
 }
 
-function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initialError = '' }) {
+function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initialError = '', theme, toggleTheme }) {
   const queryParams = new URLSearchParams(window.location.search)
   const resetEmailFromUrl = queryParams.get('email')
   const isDirectReset = queryParams.get('mode') === 'reset' || isRecoveryMode
@@ -251,12 +253,29 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
 
   return (
     <div className="auth-page">
-      {/* Ambient background refraction overlays */}
-      <div className="auth-ambient-glow top"></div>
-      <div className="auth-ambient-glow bottom"></div>
+      {/* Precision Top Navigation Bar (Identical to Dashboard) */}
+      <nav className="dashboard-nav">
+        <div className="nav-brand">
+          <span className="brand-name">React App-2</span>
+        </div>
 
-      <div className="auth-center-card">
-        {/* Top Segmented Mode Switcher (Linear / Vercel style) */}
+        <div className="nav-user-area">
+          {toggleTheme && (
+            <button 
+              className="theme-toggle-nav" 
+              onClick={toggleTheme}
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              aria-label="Toggle theme"
+            >
+              {theme === 'dark' ? <Sun size={17} className="theme-icon" /> : <Moon size={17} className="theme-icon" />}
+            </button>
+          )}
+        </div>
+      </nav>
+
+      <div className="auth-content-container">
+        <div className="auth-center-card">
+          {/* Top Segmented Mode Switcher (Linear / Vercel style) */}
         {mode !== 'forgot' && (
           <div className="auth-segmented-tabs">
             <button
@@ -538,6 +557,7 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
         </form>
       </div>
     </div>
+  </div>
   )
 }
 
