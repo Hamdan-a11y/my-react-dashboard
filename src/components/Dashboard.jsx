@@ -548,21 +548,24 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
                   className={`filter-tab-btn ${filterTab === 'all' ? 'active' : ''}`}
                   onClick={() => setFilterTab('all')}
                 >
-                  All ({tasks.length})
+                  <span>All</span>
+                  <span className="tab-count">{tasks.length}</span>
                 </button>
                 <button
                   type="button"
                   className={`filter-tab-btn ${filterTab === 'active' ? 'active' : ''}`}
                   onClick={() => setFilterTab('active')}
                 >
-                  Active ({activeCount})
+                  <span>Active</span>
+                  <span className="tab-count">{activeCount}</span>
                 </button>
                 <button
                   type="button"
                   className={`filter-tab-btn ${filterTab === 'completed' ? 'active' : ''}`}
                   onClick={() => setFilterTab('completed')}
                 >
-                  Done ({completedCount})
+                  <span>Done</span>
+                  <span className="tab-count">{completedCount}</span>
                 </button>
               </div>
             </div>
