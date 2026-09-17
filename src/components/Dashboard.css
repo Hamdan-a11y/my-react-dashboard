@@ -63,16 +63,17 @@
 }
 
 .user-avatar {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-emerald));
+  background: #27272a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 700;
-  color: white;
+  color: #fafafa;
 }
 
 .user-name {
@@ -85,9 +86,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(244, 63, 94, 0.08);
-  color: #fb7185;
-  border: 1px solid rgba(244, 63, 94, 0.2);
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
   padding: 7px 13px;
   border-radius: 9px;
   font-size: 12.5px;
@@ -95,13 +96,14 @@
   cursor: pointer;
   transition: transform var(--duration-quick) var(--ease-spring),
               background var(--duration-quick) var(--ease-smooth),
-              color var(--duration-quick) var(--ease-smooth);
+              color var(--duration-quick) var(--ease-smooth),
+              border-color var(--duration-quick) var(--ease-smooth);
 }
 
 .logout-btn-nav:hover {
-  background: var(--accent-rose);
-  color: #ffffff;
-  border-color: var(--accent-rose);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  border-color: var(--border-highlight);
   transform: translateY(-1px);
 }
 
@@ -214,7 +216,7 @@
 
 /* Circular Progress Meter Hero Bento */
 .hero-progress-card {
-  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(6, 182, 212, 0.04) 100%);
+  background: var(--bg-card);
 }
 
 .hero-progress-body {
@@ -239,7 +241,7 @@
 }
 
 .progress-ring-fill {
-  stroke: var(--accent-cyan);
+  stroke: #ffffff;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.6s var(--ease-entrance);
 }
@@ -250,18 +252,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: inherit;
 }
 
 .progress-rate-num {
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
 .progress-rate-pct {
   font-size: 13px;
-  color: var(--accent-cyan);
+  color: var(--text-muted);
   margin-left: 2px;
 }
 
@@ -379,27 +381,28 @@
   align-items: center;
   gap: 7px;
   padding: 12px 20px;
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #ffffff;
+  color: #09090b;
+  border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 12px;
   font-weight: 600;
   font-size: 13.5px;
   cursor: pointer;
-  box-shadow: 0 4px 16px -3px rgba(2, 132, 199, 0.4);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   transition: transform var(--duration-quick) var(--ease-spring),
               opacity var(--duration-quick) var(--ease-smooth),
-              box-shadow var(--duration-quick) var(--ease-smooth);
+              background var(--duration-quick) var(--ease-smooth);
   flex-shrink: 0;
 }
 
 .add-task-button:hover:not(:disabled) {
-  transform: translateY(-1.5px) scale(1.02);
-  box-shadow: 0 8px 20px -4px rgba(2, 132, 199, 0.55);
+  background: #e4e4e7;
+  color: #000000;
+  transform: translateY(-1px);
 }
 
 .add-task-button:active:not(:disabled) {
-  transform: translateY(0) scale(0.97);
+  transform: translateY(0) scale(0.98);
   transition-duration: 80ms;
 }
 
@@ -620,9 +623,9 @@
 }
 
 .custom-checkbox.checked {
-  background: var(--accent-emerald);
-  border-color: var(--accent-emerald);
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+  background: #3b82f6;
+  border-color: #3b82f6;
+  box-shadow: none;
 }
 
 .task-checkbox-input {
@@ -680,13 +683,13 @@
 }
 
 .task-action-btn.edit:hover {
-  color: var(--accent-cyan);
-  background: rgba(6, 182, 212, 0.12);
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .task-action-btn.delete:hover {
-  color: var(--accent-rose);
-  background: rgba(244, 63, 94, 0.12);
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
 }
 
 /* Inline Edit Box */
@@ -731,8 +734,8 @@
 }
 
 .inline-action-btn.save {
-  background: var(--accent-emerald);
-  color: white;
+  background: #ffffff;
+  color: #09090b;
 }
 
 .inline-action-btn.cancel {
@@ -904,18 +907,32 @@
 }
 
 :root[data-theme="light"] .hero-progress-card {
-  background: linear-gradient(135deg, #ffffff 0%, rgba(2, 132, 199, 0.04) 100%);
+  background: var(--bg-card);
 }
 
-:root[data-theme="light"] .status-pill {
-  background: #f0fdf4;
-  border-color: #bbf7d0;
-  color: #15803d;
+:root[data-theme="light"] .progress-ring-fill {
+  stroke: #0f172a;
 }
 
-:root[data-theme="light"] .welcome-pulse {
-  background: #16a34a;
-  box-shadow: 0 0 8px #16a34a;
+:root[data-theme="light"] .add-task-button {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+}
+
+:root[data-theme="light"] .add-task-button:hover:not(:disabled) {
+  background: #1e293b;
+}
+
+:root[data-theme="light"] .user-avatar {
+  background: #e2e8f0;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+:root[data-theme="light"] .inline-action-btn.save {
+  background: #0f172a;
+  color: #ffffff;
 }
 
 :root[data-theme="light"] .db-setup-banner {

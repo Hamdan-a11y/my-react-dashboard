@@ -22,29 +22,7 @@
 
 /* Ambient Subtle Aura Refractions */
 .auth-ambient-glow {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  pointer-events: none;
-  opacity: 0.5;
-}
-
-.auth-ambient-glow.top {
-  width: 500px;
-  height: 500px;
-  top: -100px;
-  left: 20%;
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
-  animation: glowBreathe 6s ease-in-out infinite alternate;
-}
-
-.auth-ambient-glow.bottom {
-  width: 450px;
-  height: 450px;
-  bottom: -100px;
-  right: 25%;
-  background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, transparent 70%);
-  animation: glowBreathe 7s ease-in-out infinite alternate-reverse;
+  display: none;
 }
 
 @keyframes glowBreathe {
@@ -183,7 +161,7 @@
 }
 
 .input-with-icon:focus-within .field-icon {
-  color: var(--accent-cyan);
+  color: var(--text-primary);
 }
 
 .auth-input-field {
@@ -351,27 +329,28 @@
   justify-content: center;
   gap: 8px;
   padding: 13px 20px;
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: #ffffff;
+  color: #09090b;
+  border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 12px;
   font-size: 14.5px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 6px 20px -4px rgba(2, 132, 199, 0.5);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   transition: transform var(--duration-quick) var(--ease-spring),
-              box-shadow var(--duration-quick) var(--ease-smooth),
+              opacity var(--duration-quick) var(--ease-smooth),
               background var(--duration-quick) var(--ease-smooth);
   margin-bottom: 22px;
 }
 
 .main-auth-btn:hover:not(:disabled) {
-  transform: translateY(-1.5px) scale(1.01);
-  box-shadow: 0 10px 24px -4px rgba(2, 132, 199, 0.65);
+  background: #e4e4e7;
+  color: #000000;
+  transform: translateY(-1px);
 }
 
 .main-auth-btn:active:not(:disabled) {
-  transform: translateY(0) scale(0.97);
+  transform: translateY(0) scale(0.98);
   transition-duration: 80ms;
 }
 
@@ -526,6 +505,16 @@
 :root[data-theme="light"] .social-divider::before,
 :root[data-theme="light"] .social-divider::after {
   border-bottom-color: rgba(15, 23, 42, 0.1);
+}
+
+:root[data-theme="light"] .main-auth-btn {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+}
+
+:root[data-theme="light"] .main-auth-btn:hover:not(:disabled) {
+  background: #1e293b;
 }
 
 :root[data-theme="light"] .auth-msg.error {
