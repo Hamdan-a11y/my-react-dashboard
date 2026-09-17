@@ -10,10 +10,10 @@
   --bg-nav: rgba(9, 9, 11, 0.85);
   --bg-panel: #141417;
   
-  /* Typography Scale */
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
+  /* Typography Scale (Pure White in Dark Mode) */
+  --text-primary: #ffffff;
+  --text-secondary: #ffffff;
+  --text-muted: #ffffff;
   
   /* Precision Borders & Hairlines */
   --border-color: rgba(255, 255, 255, 0.08);

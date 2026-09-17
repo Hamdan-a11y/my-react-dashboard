@@ -303,15 +303,15 @@
 .forgot-link-btn {
   background: none;
   border: none;
-  color: var(--accent-cyan);
+  color: #ffffff;
   font-size: 13px;
   cursor: pointer;
   padding: 0;
-  transition: color var(--duration-quick) var(--ease-smooth);
+  transition: opacity var(--duration-quick) var(--ease-smooth);
 }
 
 .forgot-link-btn:hover {
-  color: #38bdf8;
+  opacity: 0.8;
   text-decoration: underline;
 }
 
