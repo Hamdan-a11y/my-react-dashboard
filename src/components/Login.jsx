@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react'
-import { Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { 
+  Eye, 
+  EyeOff, 
+  AlertCircle, 
+  CheckCircle2, 
+  User, 
+  Mail, 
+  Lock, 
+  ArrowRight
+} from 'lucide-react'
 import emailjs from '@emailjs/browser'
 import { supabase } from '../supabaseClient'
 import './Login.css'
@@ -161,81 +170,27 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
       return
     }
 
-    setFieldErrors({})
+    setIsSending(true)
 
-    // 💾 Handle "Remember Me" persistence
-    if (rememberMe) {
+    // Handle "Remember Me"
+    if (rememberMe && email.trim()) {
       localStorage.setItem('rememberedEmail', email.trim())
     } else {
       localStorage.removeItem('rememberedEmail')
     }
 
-    // 1. FORGOT PASSWORD MODE (Supabase Native Auth Recovery)
-    if (mode === 'forgot') {
-      if (!isSettingNewPassword) {
-        setIsSending(true)
-        try {
-          const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-            redirectTo: window.location.origin,
-          })
-
-          if (resetError) {
-            setGeneralError(getFriendlyErrorMessage(resetError))
-            return
-          }
-
-          setSuccess(`A secure reset link has been sent to ${email.trim()}! Please check your inbox and click the link to set your new password.`)
-        } catch (err) {
-          console.error('Password reset error:', err)
-          setGeneralError(getFriendlyErrorMessage(err))
-        } finally {
-          setIsSending(false)
-        }
-        return
-      }
-
-      setIsSending(true)
-      try {
-        // Verify that Supabase has an active recovery session
-        const { data: { session: currentSession } } = await supabase.auth.getSession()
-        if (!currentSession) {
-          setGeneralError('No active recovery session found. Your link may have expired. Please request a new password reset link.')
-          setIsSending(false)
-          return
-        }
-
-        const { error: updateError } = await supabase.auth.updateUser({
-          password: newPassword,
+    try {
+      if (mode === 'login') {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
         })
-
-        if (updateError) {
-          setGeneralError(getFriendlyErrorMessage(updateError))
-          return
+        if (signInError) {
+          setGeneralError(getFriendlyErrorMessage(signInError))
         }
-
-        setSuccess('Password updated successfully! Redirecting...')
-        setTimeout(() => {
-          if (onPasswordResetComplete) {
-            onPasswordResetComplete()
-          } else {
-            handleModeChange('login')
-          }
-        }, 1800)
-      } catch (err) {
-        setGeneralError(getFriendlyErrorMessage(err))
-      } finally {
-        setIsSending(false)
-      }
-      return
-    }
-
-    // 2. SIGN UP MODE (Supabase Cloud Auth)
-    if (mode === 'signup') {
-      setIsSending(true)
-      try {
+      } else if (mode === 'signup') {
         const fullName = `${firstName.trim()} ${lastName.trim()}`.trim()
-
-        const { data, error: signUpError } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
@@ -247,90 +202,98 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
 
         if (signUpError) {
           setGeneralError(getFriendlyErrorMessage(signUpError))
-          return
+        } else if (signUpData?.user && !signUpData.session) {
+          setSuccess('Account registered! Please check your email inbox to verify your account.')
         }
+      } else if (mode === 'forgot') {
+        if (isSettingNewPassword) {
+          const { error: updateError } = await supabase.auth.updateUser({
+            password: newPassword,
+          })
 
-        // Supabase returns an empty identities array if user is already registered with email confirmation enabled
-        if (data?.user?.identities?.length === 0) {
-          setGeneralError('An account with this email already exists. Please log in instead.')
-          return
-        }
-
-        if (data?.session) {
-          setSuccess('Account created successfully! Logging you in...')
-        } else {
-          setSuccess('Account created! Please check your inbox to confirm your email before signing in.')
-        }
-      } catch (err) {
-        setGeneralError(getFriendlyErrorMessage(err))
-      } finally {
-        setIsSending(false)
-      }
-      return
-    }
-
-    // 3. LOGIN MODE (Supabase Cloud Auth)
-    if (mode === 'login') {
-      setIsSending(true)
-      try {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        })
-
-        if (signInError) {
-          const rawMsg = (signInError.message || '').toLowerCase()
-          if (rawMsg.includes('invalid login credentials') || rawMsg.includes('invalid credentials')) {
-            // Only flag the password as incorrect, keep email intact
-            setFieldErrors({
-              password: 'Incorrect password. Please try again or use Forgot password.'
-            })
-            setGeneralError('')
+          if (updateError) {
+            setGeneralError(getFriendlyErrorMessage(updateError))
           } else {
-            setGeneralError(getFriendlyErrorMessage(signInError))
+            setSuccess('Password updated successfully! Logging you in...')
+            setTimeout(() => {
+              if (onPasswordResetComplete) {
+                onPasswordResetComplete()
+              } else {
+                setMode('login')
+                setIsSettingNewPassword(false)
+                setPassword('')
+                setNewPassword('')
+              }
+            }, 1200)
           }
-          return
+        } else {
+          const redirectUrl = `${window.location.origin}/?mode=reset`
+          const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+            email.trim(),
+            { redirectTo: redirectUrl }
+          )
+
+          if (resetError) {
+            setGeneralError(getFriendlyErrorMessage(resetError))
+          } else {
+            setSuccess(`A secure reset link has been dispatched to ${email.trim()}. Check your inbox.`)
+          }
         }
-      } catch (err) {
-        setGeneralError(getFriendlyErrorMessage(err))
-      } finally {
-        setIsSending(false)
       }
-      return
+    } catch (err) {
+      setGeneralError('An unexpected error occurred. Please try again.')
+    } finally {
+      setIsSending(false)
     }
   }
 
+  const isSignupPasswordValid = password.length >= 6
+
   return (
     <div className="auth-page">
-      <div className="auth-center-card">
-        <h2 className="auth-title">
-          {mode === 'signup' && 'Create an account'}
-          {mode === 'login' && 'Welcome back'}
-          {mode === 'forgot' && (isSettingNewPassword ? 'Create new password' : 'Reset your password')}
-        </h2>
-        
-        <p className="auth-subtext">
-          {mode === 'signup' && (
-            <>
-              Already have an account? 
-              <button type="button" onClick={() => handleModeChange('login')}>
-                Log in
-              </button>
-            </>
-          )}
-          {mode === 'login' && (
-            <>
-              Don't have an account? 
-              <button type="button" onClick={() => handleModeChange('signup')}>
-                Sign up
-              </button>
-            </>
-          )}
-          {mode === 'forgot' && (isSettingNewPassword 
-            ? 'Enter your new password below' 
-            : 'Enter your email to receive a real reset link in your inbox')}
-        </p>
+      {/* Ambient background refraction overlays */}
+      <div className="auth-ambient-glow top"></div>
+      <div className="auth-ambient-glow bottom"></div>
 
+      <div className="auth-center-card">
+        {/* Top Segmented Mode Switcher (Linear / Vercel style) */}
+        {mode !== 'forgot' && (
+          <div className="auth-segmented-tabs">
+            <button
+              type="button"
+              className={`auth-segment-btn ${mode === 'login' ? 'active' : ''}`}
+              onClick={() => handleModeChange('login')}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              className={`auth-segment-btn ${mode === 'signup' ? 'active' : ''}`}
+              onClick={() => handleModeChange('signup')}
+            >
+              Create Account
+            </button>
+          </div>
+        )}
+
+        {/* Card Brand Header */}
+        <div className="auth-header-block">
+          <h2 className="auth-title">
+            {mode === 'signup' && 'Create your account'}
+            {mode === 'login' && 'Welcome back'}
+            {mode === 'forgot' && (isSettingNewPassword ? 'Set new password' : 'Reset your password')}
+          </h2>
+          
+          <p className="auth-subtext">
+            {mode === 'signup' && 'Start organizing your cloud tasks with real-time sync.'}
+            {mode === 'login' && 'Access your workspace and real-time cloud tasks.'}
+            {mode === 'forgot' && (isSettingNewPassword 
+              ? 'Enter your new password to secure your account.' 
+              : 'Enter your email to receive a secure recovery link.')}
+          </p>
+        </div>
+
+        {/* System Alert Banners */}
         {generalError && (
           <div className="auth-msg error">
             <AlertCircle size={16} style={{ flexShrink: 0 }} />
@@ -345,26 +308,33 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
         )}
 
         <form onSubmit={handleSubmit} noValidate>
+          {/* Sign Up: First Name & Last Name Fields */}
           {mode === 'signup' && (
-            <>
+            <div className="input-row-container">
               <div className="input-row">
-                <input
-                  type="text"
-                  className={`auth-input-field ${fieldErrors.firstName ? 'input-has-error' : ''}`}
-                  placeholder="First Name"
-                  value={firstName}
-                  onChange={(e) => {
-                    setFirstName(e.target.value)
-                    clearFieldError('firstName')
-                  }}
-                />
-                <input
-                  type="text"
-                  className="auth-input-field"
-                  placeholder="Last Name"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                />
+                <div className={`input-with-icon ${fieldErrors.firstName ? 'has-error' : ''}`}>
+                  <User size={15} className="field-icon" />
+                  <input
+                    type="text"
+                    className="auth-input-field"
+                    placeholder="First Name"
+                    value={firstName}
+                    onChange={(e) => {
+                      setFirstName(e.target.value)
+                      clearFieldError('firstName')
+                    }}
+                  />
+                </div>
+                <div className="input-with-icon">
+                  <User size={15} className="field-icon" />
+                  <input
+                    type="text"
+                    className="auth-input-field"
+                    placeholder="Last Name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </div>
               </div>
               {fieldErrors.firstName && (
                 <div className="field-error-msg">
@@ -372,36 +342,43 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
                   <span>{fieldErrors.firstName}</span>
                 </div>
               )}
-            </>
+            </div>
           )}
 
-          {(!isSettingNewPassword) && (
-            <>
-              <input
-                type="email"
-                className={`auth-input-field ${fieldErrors.email ? 'input-has-error' : ''}`}
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value)
-                  clearFieldError('email')
-                }}
-              />
-              {fieldErrors.email && fieldErrors.email.trim() && (
+          {/* Email Field (All modes except direct password update) */}
+          {!isSettingNewPassword && (
+            <div className="field-group">
+              <div className={`input-with-icon ${fieldErrors.email ? 'has-error' : ''}`}>
+                <Mail size={15} className="field-icon" />
+                <input
+                  type="email"
+                  className="auth-input-field"
+                  placeholder="name@company.com"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    clearFieldError('email')
+                  }}
+                />
+              </div>
+              {fieldErrors.email && (
                 <div className="field-error-msg">
                   <AlertCircle size={13} />
                   <span>{fieldErrors.email}</span>
                 </div>
               )}
-            </>
+            </div>
           )}
 
+          {/* Direct Reset: New Password */}
           {mode === 'forgot' && isSettingNewPassword && (
-            <>
-              <div className={`password-box ${fieldErrors.newPassword ? 'input-has-error' : ''}`}>
+            <div className="field-group">
+              <div className={`input-with-icon password-box ${fieldErrors.newPassword ? 'has-error' : ''}`}>
+                <Lock size={15} className="field-icon" />
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter new password (min 6 chars)"
+                  className="auth-input-field"
+                  placeholder="New password (min 6 chars)"
                   value={newPassword}
                   onChange={(e) => {
                     setNewPassword(e.target.value)
@@ -413,7 +390,7 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
                   className="eye-toggle-btn"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {fieldErrors.newPassword && (
@@ -422,15 +399,18 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
                   <span>{fieldErrors.newPassword}</span>
                 </div>
               )}
-            </>
+            </div>
           )}
 
+          {/* Standard Password Field */}
           {mode !== 'forgot' && (
-            <>
-              <div className={`password-box ${fieldErrors.password ? 'input-has-error' : ''}`}>
+            <div className="field-group">
+              <div className={`input-with-icon password-box ${fieldErrors.password ? 'has-error' : ''}`}>
+                <Lock size={15} className="field-icon" />
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder={mode === 'signup' ? 'Create a password (min 6 chars)' : 'Enter your password'}
+                  className="auth-input-field"
+                  placeholder={mode === 'signup' ? 'Create password' : 'Enter password'}
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value)
@@ -442,32 +422,33 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
                   className="eye-toggle-btn"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-              {fieldErrors.password && fieldErrors.password.trim() && (
+
+              {/* Real-time Password Strength Micro-Pill for Sign Up */}
+              {mode === 'signup' && password.length > 0 && (
+                <div className="password-indicator-row">
+                  <span className={`pass-rule ${isSignupPasswordValid ? 'valid' : 'invalid'}`}>
+                    <CheckCircle2 size={12} />
+                    {isSignupPasswordValid ? 'Password meets requirements' : 'Minimum 6 characters required'}
+                  </span>
+                </div>
+              )}
+
+              {fieldErrors.password && (
                 <div className="field-error-msg">
                   <AlertCircle size={13} />
                   <span>{fieldErrors.password}</span>
                 </div>
               )}
-            </>
+            </div>
           )}
 
-          {mode === 'signup' && (
-            <label className="terms-row">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-              />
-              <span>Remember me</span>
-            </label>
-          )}
-
+          {/* Remember Me & Forgot Password Row */}
           {mode === 'login' && (
             <div className="options-row">
-              <label className="terms-row" style={{ margin: 0 }}>
+              <label className="terms-row">
                 <input
                   type="checkbox"
                   checked={rememberMe}
@@ -486,42 +467,61 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
             </div>
           )}
 
+          {mode === 'signup' && (
+            <div className="options-row signup-terms">
+              <label className="terms-row">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <span>Remember me</span>
+              </label>
+            </div>
+          )}
+
+          {/* Submit Button */}
           <button 
             type="submit" 
             className="main-auth-btn"
             disabled={isSending}
           >
-            {isSending ? 'Please wait...' : (
-              mode === 'signup' 
-                ? 'Create account' 
-                : mode === 'login' 
-                  ? 'Sign in' 
-                  : (!isSettingNewPassword ? 'Send Reset Link' : 'Update Password')
-            )}
+            <span>
+              {isSending ? 'Authenticating...' : (
+                mode === 'signup' 
+                  ? 'Create Account' 
+                  : mode === 'login' 
+                    ? 'Sign In to Workspace' 
+                    : (!isSettingNewPassword ? 'Send Recovery Link' : 'Confirm New Password')
+              )}
+            </span>
+            {!isSending && <ArrowRight size={15} />}
           </button>
 
+          {/* Back to Login for Forgot Password Mode */}
           {mode === 'forgot' && (
-            <div style={{ textAlign: 'center', marginTop: '-10px', marginBottom: '20px' }}>
+            <div className="forgot-back-row">
               <button
                 type="button"
                 className="forgot-link-btn"
                 onClick={() => handleModeChange('login')}
               >
-                ← Back to Log in
+                &larr; Back to sign in
               </button>
             </div>
           )}
 
+          {/* OAuth Social Providers */}
           {mode !== 'forgot' && (
             <>
               <div className="social-divider">
-                <span>{mode === 'signup' ? 'Or register with' : 'Or log in with'}</span>
+                <span>Or continue with</span>
               </div>
 
               <div className="social-row">
                 <button
                   type="button"
-                  className="social-outline-btn"
+                  className="social-outline-btn google full-width"
                   onClick={handleGoogleLogin}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24">
@@ -530,18 +530,7 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
                     <path fill="#FBBC05" d="M5.5 14.8c-.2-.7-.4-1.5-.4-2.8s.1-2.1.4-2.8L1.9 6.4C.7 8.8 0 10.4 0 12s.7 3.2 1.9 5.6l3.6-2.8z"/>
                     <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.6-2.2-6.5-5.2L1.9 16C3.7 19.8 7.5 23 12 23z"/>
                   </svg>
-                  Google
-                </button>
-
-                <button
-                  type="button"
-                  className="social-outline-btn"
-                  onClick={() => onLogin?.('Apple User')}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.38c.62-.75 1.04-1.8 1.01-2.85-.94.04-2.07.63-2.73 1.4-.58.67-.99 1.74-.95 2.78 1.06.08 2.05-.58 2.67-1.33z"/>
-                  </svg>
-                  Apple
+                  <span>Continue with Google</span>
                 </button>
               </div>
             </>

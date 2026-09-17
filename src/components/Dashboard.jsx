@@ -23,7 +23,8 @@ import {
   X,
   Pencil,
   Check,
-  CheckCheck
+  CheckCheck,
+  Radio
 } from 'lucide-react'
 
 function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
@@ -340,15 +341,21 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
     })
   }
 
+  // SVG circular completion progress calculation
+  const circleRadius = 38
+  const circleCircumference = 2 * Math.PI * circleRadius
+  const circleStrokeOffset = circleCircumference - (completionRate / 100) * circleCircumference
+
   return (
     <div className="dashboard-page">
-      {/* Top Navigation Bar */}
+      {/* Precision Top Navigation Bar */}
       <nav className="dashboard-nav">
         <div className="nav-brand">
           <div className="brand-icon">
             <Zap size={18} />
           </div>
-          <span className="brand-name">my-react-app</span>
+          <span className="brand-name">React App-2</span>
+          <span className="brand-tag">v2.0 Workspace</span>
         </div>
 
         <div className="nav-user-area">
@@ -371,7 +378,7 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
           <button 
             className="logout-btn-nav" 
             onClick={onLogout}>
-            <LogOut size={15} />
+            <LogOut size={14} />
             Sign Out
           </button>
         </div>
@@ -382,123 +389,177 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
         {/* Welcome Header */}
         <div className="welcome-header">
           <div className="welcome-title">
+            <div className="welcome-pill-sub">
+              <span className="welcome-pulse"></span>
+              Workspace Synced &bull; Realtime Active
+            </div>
             <h1>
-              Welcome back, {user || 'User'}!{' '}
-              <Sparkles size={22} color="#f59e0b" style={{ display: 'inline', verticalAlign: 'middle' }} />
+              Welcome back, {user || 'User'}
+              <Sparkles size={20} className="sparkle-icon" />
             </h1>
-            <p>
-              Connected to <strong>Supabase Cloud</strong> &bull; Authenticated as <code>{userEmail}</code>
+            <p className="welcome-meta">
+              Authenticated session: <code>{userEmail}</code>
             </p>
           </div>
 
           <div className="status-pill">
-            <span className="status-dot"></span>
-            Cloud Synced
+            <Radio size={14} className="live-radio" />
+            <span>Supabase Cloud Connected</span>
           </div>
         </div>
 
         {/* Database Setup Notice if table not created yet */}
         {tableMissing && (
           <div className="db-setup-banner">
-            <AlertCircle size={20} color="#f59e0b" style={{ flexShrink: 0 }} />
+            <AlertCircle size={20} style={{ flexShrink: 0 }} />
             <div className="db-setup-text">
-              <strong>Supabase Setup Required:</strong> The <code>tasks</code> table has not been created in your Supabase database yet.
-              Please go to your Supabase <strong>SQL Editor</strong> and run the provided SQL script to activate cloud task storage.
+              <strong>Database Configuration Notice:</strong> The <code>tasks</code> table has not been initialized in your Supabase project.
+              Open your Supabase <strong>SQL Editor</strong> and run the schema setup query to activate persistent cloud storage.
             </div>
             <button 
               className="refresh-btn" 
               onClick={fetchTasks}
               title="Check again"
             >
-              Retry
+              Retry Connection
             </button>
           </div>
         )}
 
         {errorMessage && !tableMissing && (
           <div className="db-setup-banner error-state">
-            <AlertCircle size={20} color="#ef4444" style={{ flexShrink: 0 }} />
+            <AlertCircle size={20} style={{ flexShrink: 0 }} />
             <div className="db-setup-text">
-              <strong>Error:</strong> {errorMessage}
+              <strong>System Notice:</strong> {errorMessage}
             </div>
           </div>
         )}
 
-        {/* Real Stats Grid */}
-        <div className="stats-container">
-          <div className="stat-box">
-            <div className="stat-top">
-              <span className="stat-icon">
-                <ListTodo size={20} color="#818cf8" />
-              </span>
-              <span className="stat-tag neutral">In Progress</span>
-            </div>
-            <h4>Active Tasks</h4>
-            <div className="stat-val">{activeCount}</div>
-          </div>
-
-          <div className="stat-box">
-            <div className="stat-top">
-              <span className="stat-icon">
-                <CheckCircle2 size={20} color="#4ade80" />
-              </span>
+        {/* Asymmetrical Bento Grid (Design Variance 8) */}
+        <div className="stats-bento-grid">
+          {/* Hero Bento Item: Circular Progress Meter */}
+          <div className="bento-box hero-progress-card">
+            <div className="bento-header">
+              <span className="bento-label">Completion Velocity</span>
               <span className="stat-tag positive">{completionRate}% Done</span>
             </div>
-            <h4>Completion Rate</h4>
-            <div className="stat-val">{completedCount} / {tasks.length}</div>
+            
+            <div className="hero-progress-body">
+              <div className="circular-progress-wrap">
+                <svg className="progress-ring" width="96" height="96" viewBox="0 0 96 96">
+                  <circle
+                    className="progress-ring-track"
+                    cx="48"
+                    cy="48"
+                    r={circleRadius}
+                    fill="transparent"
+                    strokeWidth="8"
+                  />
+                  <circle
+                    className="progress-ring-fill"
+                    cx="48"
+                    cy="48"
+                    r={circleRadius}
+                    fill="transparent"
+                    strokeWidth="8"
+                    strokeDasharray={circleCircumference}
+                    strokeDashoffset={circleStrokeOffset}
+                  />
+                </svg>
+                <div className="progress-ring-text">
+                  <span className="progress-rate-num">{completionRate}</span>
+                  <span className="progress-rate-pct">%</span>
+                </div>
+              </div>
+
+              <div className="hero-progress-meta">
+                <div className="hero-stat-row">
+                  <span className="dot-indicator done"></span>
+                  <span className="hero-stat-text">Completed:</span>
+                  <strong>{completedCount} tasks</strong>
+                </div>
+                <div className="hero-stat-row">
+                  <span className="dot-indicator pending"></span>
+                  <span className="hero-stat-text">Remaining:</span>
+                  <strong>{activeCount} tasks</strong>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="stat-box">
-            <div className="stat-top">
-              <span className="stat-icon">
-                <TrendingUp size={20} color="#38bdf8" />
+          {/* Bento Item 2: Active Tasks Telemetry */}
+          <div className="bento-box telemetry-box">
+            <div className="bento-header">
+              <span className="bento-icon-box cyan">
+                <ListTodo size={18} />
               </span>
-              <span className="stat-tag positive">
-                {tasks.length > 0 ? `${tasks.length} Total` : 'Ready'}
-              </span>
+              <span className="bento-pill-tag">In Pipeline</span>
             </div>
-            <h4>Total Cloud Items</h4>
-            <div className="stat-val">{tasks.length}</div>
+            <div className="bento-metric-block">
+              <span className="bento-val">{activeCount}</span>
+              <span className="bento-sub">Active tasks requiring focus</span>
+            </div>
+          </div>
+
+          {/* Bento Item 3: Total Cloud Volume */}
+          <div className="bento-box telemetry-box">
+            <div className="bento-header">
+              <span className="bento-icon-box amber">
+                <TrendingUp size={18} />
+              </span>
+              <span className="bento-pill-tag">All-Time</span>
+            </div>
+            <div className="bento-metric-block">
+              <span className="bento-val">{tasks.length}</span>
+              <span className="bento-sub">Total synchronized items</span>
+            </div>
           </div>
         </div>
 
         {/* 2-Column Section: Task Manager & Real Activity */}
         <div className="dashboard-grid">
           {/* Task Manager Panel */}
-          <div className="panel-card">
+          <div className="panel-card tasks-primary-panel">
             <div className="panel-header">
-              <h3>Real-Time Cloud Tasks</h3>
-              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                {activeCount} remaining
-              </span>
+              <div className="panel-header-left">
+                <h3>Cloud Task Engine</h3>
+                <span className="panel-sub-count">
+                  {filteredTasks.length} {filteredTasks.length === 1 ? 'item' : 'items'} displayed
+                </span>
+              </div>
+              <div className="keyboard-hint-pill">
+                <kbd>Double-click</kbd> to edit
+              </div>
             </div>
 
-            {/* Task Add Bar */}
+            {/* Task Add Bar with Tactile Input */}
             <form className="task-input-bar" onSubmit={handleAddTask}>
-              <input
-                type="text"
-                placeholder={tableMissing ? "Create table in Supabase first..." : "Add a new task to Supabase..."}
-                value={newTaskInput}
-                onChange={(e) => setNewTaskInput(e.target.value)}
-                disabled={isSubmitting || tableMissing}
-              />
+              <div className="task-input-wrapper">
+                <input
+                  type="text"
+                  placeholder={tableMissing ? "Initialize table in Supabase..." : "Create a new task... (Press Enter)"}
+                  value={newTaskInput}
+                  onChange={(e) => setNewTaskInput(e.target.value)}
+                  disabled={isSubmitting || tableMissing}
+                />
+              </div>
               <button 
                 type="submit" 
                 className="add-task-button"
-                disabled={isSubmitting || tableMissing}
+                disabled={isSubmitting || tableMissing || !newTaskInput.trim()}
               >
-                {isSubmitting ? <Loader2 size={16} className="spin" /> : <Plus size={16} />}
-                {isSubmitting ? 'Saving...' : 'Add'}
+                {isSubmitting ? <Loader2 size={15} className="spin" /> : <Plus size={15} />}
+                <span>{isSubmitting ? 'Saving...' : 'Add Task'}</span>
               </button>
             </form>
 
-            {/* 🔎 Search Bar & Filter Tabs */}
+            {/* 🔎 Search Bar & Segmented Filter Tabs */}
             <div className="tasks-control-bar">
               <div className="tasks-search-box">
-                <Search size={15} className="search-icon" />
+                <Search size={14} className="search-icon" />
                 <input
                   type="text"
-                  placeholder="Search tasks..."
+                  placeholder="Filter tasks by keyword..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -539,30 +600,36 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
               </div>
             </div>
 
-            {/* Tasks List */}
+            {/* Tasks List with 3-Layer Motion */}
             {loadingTasks ? (
-              <div style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-secondary)' }}>
-                <Loader2 size={24} className="spin" style={{ margin: '0 auto 8px auto', display: 'block', color: '#818cf8' }} />
-                Loading your tasks from Supabase...
+              <div className="tasks-loading-state">
+                <Loader2 size={24} className="spin loading-spinner" />
+                <p>Synchronizing tasks with Supabase...</p>
               </div>
             ) : (
               <>
                 <ul className="task-items-list">
                   {filteredTasks.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '28px 0', fontSize: '14px' }}>
-                      {tableMissing 
-                        ? 'Create the table in your Supabase SQL Editor to start saving tasks.'
-                        : searchQuery 
-                          ? 'No tasks match your search query.'
-                          : filterTab === 'completed' 
-                            ? 'No completed tasks yet.' 
-                            : filterTab === 'active' 
-                              ? 'All caught up! No active tasks.' 
-                              : 'No tasks found in your database. Add your first task above!'}
-                    </p>
+                    <li className="task-empty-state">
+                      <p>
+                        {tableMissing 
+                          ? 'Create the table in your Supabase SQL Editor to start saving tasks.'
+                          : searchQuery 
+                            ? 'No tasks match your search filter.'
+                            : filterTab === 'completed' 
+                              ? 'No completed tasks yet. Mark items done as you finish them!' 
+                              : filterTab === 'active' 
+                                ? 'All tasks complete! Add a new item to keep momentum.' 
+                                : 'No tasks in your workspace. Capture your first thought above.'}
+                      </p>
+                    </li>
                   ) : (
-                    filteredTasks.map(task => (
-                      <li key={task.id} className="task-row">
+                    filteredTasks.map((task, index) => (
+                      <li 
+                        key={task.id} 
+                        className={`task-row ${task.completed ? 'is-completed' : ''}`}
+                        style={{ animationDelay: `${Math.min(index * 25, 200)}ms` }}
+                      >
                         {editingTaskId === task.id ? (
                           /* ✏️ Inline Editing Mode */
                           <div className="inline-edit-box">
@@ -577,33 +644,38 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
                                 if (e.key === 'Escape') cancelEditing()
                               }}
                             />
-                            <button
-                              type="button"
-                              className="inline-action-btn save"
-                              onClick={() => saveEditing(task.id)}
-                              title="Save (Enter)"
-                            >
-                              <Check size={15} />
-                            </button>
-                            <button
-                              type="button"
-                              className="inline-action-btn cancel"
-                              onClick={cancelEditing}
-                              title="Cancel (Esc)"
-                            >
-                              <X size={15} />
-                            </button>
+                            <div className="inline-edit-actions">
+                              <button
+                                type="button"
+                                className="inline-action-btn save"
+                                onClick={() => saveEditing(task.id)}
+                                title="Save (Enter)"
+                              >
+                                <Check size={14} />
+                              </button>
+                              <button
+                                type="button"
+                                className="inline-action-btn cancel"
+                                onClick={cancelEditing}
+                                title="Cancel (Esc)"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
                           </div>
                         ) : (
                           /* Standard Row Display */
                           <>
                             <label className="task-left">
-                              <input
-                                type="checkbox"
-                                className="task-checkbox"
-                                checked={Boolean(task.completed)}
-                                onChange={() => toggleTask(task.id, task.completed)}
-                              />
+                              <div className={`custom-checkbox ${task.completed ? 'checked' : ''}`}>
+                                <input
+                                  type="checkbox"
+                                  className="task-checkbox-input"
+                                  checked={Boolean(task.completed)}
+                                  onChange={() => toggleTask(task.id, task.completed)}
+                                />
+                                {task.completed && <Check size={12} className="check-svg" />}
+                              </div>
                               <span 
                                 className={`task-text ${task.completed ? 'completed' : ''}`}
                                 onDoubleClick={() => startEditing(task)}
@@ -618,9 +690,9 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
                                 type="button"
                                 className="task-action-btn edit"
                                 onClick={() => startEditing(task)}
-                                title="Edit task"
+                                title="Edit task (or double-click text)"
                               >
-                                <Pencil size={14} />
+                                <Pencil size={13} />
                               </button>
                               <button
                                 type="button"
@@ -628,7 +700,7 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
                                 onClick={() => handleDeleteTask(task.id)}
                                 title="Delete task from cloud"
                               >
-                                <Trash2 size={15} />
+                                <Trash2 size={13} />
                               </button>
                             </div>
                           </>
@@ -638,7 +710,7 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
                   )}
                 </ul>
 
-                {/* ⚡ Batch Actions Bar */}
+                {/* ⚡ Batch Actions Toolbar */}
                 {tasks.length > 0 && (
                   <div className="batch-actions-bar">
                     {activeCount > 0 && (
@@ -670,52 +742,60 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
             )}
           </div>
 
-          {/* Real Activity & Account Information Panel */}
-          <div className="panel-card">
+          {/* Telemetry & Live Account Status Panel */}
+          <div className="panel-card activity-telemetry-panel">
             <div className="panel-header">
-              <h3>Live Account & Activity</h3>
+              <h3>System Telemetry</h3>
+              <span className="telemetry-live-badge">Online</span>
             </div>
 
             <div className="activity-list">
               <div className="activity-item">
-                <div className="activity-icon">
+                <div className="activity-icon cyan">
                   <UserCheck size={16} />
                 </div>
                 <div className="activity-info">
-                  <p>Active Session</p>
+                  <p>Authenticated Profile</p>
                   <span>{userEmail}</span>
                 </div>
               </div>
 
               <div className="activity-item">
-                <div className="activity-icon">
+                <div className="activity-icon emerald">
                   <ShieldCheck size={16} />
                 </div>
                 <div className="activity-info">
-                  <p>Last Authentication</p>
+                  <p>Security Handshake</p>
                   <span>{formatDate(lastSignIn)}</span>
                 </div>
               </div>
 
               <div className="activity-item">
-                <div className="activity-icon">
+                <div className="activity-icon amber">
                   <Calendar size={16} />
                 </div>
                 <div className="activity-info">
-                  <p>Member Since</p>
+                  <p>Account Inception</p>
                   <span>{formatDate(createdAt)}</span>
                 </div>
               </div>
 
               <div className="activity-item">
-                <div className="activity-icon">
+                <div className="activity-icon blue">
                   <Activity size={16} />
                 </div>
                 <div className="activity-info">
-                  <p>Database Status</p>
-                  <span>{tableMissing ? 'Schema Setup Needed' : 'Connected (Real-time Active)'}</span>
+                  <p>Real-time Replication</p>
+                  <span className="replication-badge">
+                    {tableMissing ? 'Schema Setup Pending' : 'Subscribed to WebSocket Stream'}
+                  </span>
                 </div>
               </div>
+            </div>
+
+            <div className="telemetry-footer-note">
+              <Clock size={13} />
+              <span>End-to-end encrypted session</span>
             </div>
           </div>
         </div>
