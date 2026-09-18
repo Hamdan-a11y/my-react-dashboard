@@ -110,9 +110,9 @@ function App() {
         <div className="splash-glow"></div>
         <div className="splash-card">
           <div className="splash-icon-box">
-            <span style={{ fontSize: '20px', fontWeight: '800' }}>R2</span>
+            <span style={{ fontSize: '18px', fontWeight: '800', letterSpacing: '-0.03em' }}>RD</span>
           </div>
-          <h2 className="splash-brand">React App-2</h2>
+          <h2 className="splash-brand">React Dashboard</h2>
           <p className="splash-sub">Connecting to secure cloud services...</p>
           <div className="splash-progress-track">
             <div className="splash-progress-bar"></div>

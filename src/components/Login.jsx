@@ -330,7 +330,7 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
       {/* Precision Top Navigation Bar (Identical to Dashboard) */}
       <nav className="dashboard-nav">
         <div className="nav-brand">
-          <span className="brand-name">React App-2</span>
+          <span className="brand-name">React Dashboard</span>
         </div>
 
         <div className="nav-user-area">

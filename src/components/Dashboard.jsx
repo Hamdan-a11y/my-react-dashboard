@@ -433,7 +433,7 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
       {/* Precision Top Navigation Bar */}
       <nav className="dashboard-nav">
         <div className="nav-brand">
-          <span className="brand-name">React App-2</span>
+          <span className="brand-name">React Dashboard</span>
         </div>
 
         <div className="nav-user-area">
