@@ -11,7 +11,8 @@ import {
   Sun,
   Moon,
   ShieldCheck,
-  LockKeyhole
+  LockKeyhole,
+  Activity
 } from 'lucide-react'
 import emailjs from '@emailjs/browser'
 import { supabase } from '../supabaseClient'
@@ -52,7 +53,7 @@ const getFriendlyErrorMessage = (rawError) => {
   return msg
 }
 
-function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initialError = '', theme, toggleTheme }) {
+function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initialError = '', theme, toggleTheme, onDemoLogin }) {
   const queryParams = new URLSearchParams(window.location.search)
   const resetEmailFromUrl = queryParams.get('email')
   const isDirectReset = queryParams.get('mode') === 'reset' || isRecoveryMode
@@ -648,6 +649,26 @@ function Login({ onLogin, isRecoveryMode = false, onPasswordResetComplete, initi
                   <span>Continue with Google</span>
                 </button>
               </div>
+
+              {onDemoLogin && (
+                <div style={{ marginTop: '16px' }}>
+                  <button
+                    type="button"
+                    className="social-outline-btn full-width"
+                    onClick={onDemoLogin}
+                    style={{
+                      borderColor: '#6366f1',
+                      color: '#6366f1',
+                      background: 'rgba(99, 102, 241, 0.06)',
+                      fontWeight: '600',
+                      gap: '8px'
+                    }}
+                  >
+                    <Activity size={17} />
+                    <span>Explore Observability Demo (Instant Access)</span>
+                  </button>
+                </div>
+              )}
             </>
           )}
         </form>

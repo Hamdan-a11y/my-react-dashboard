@@ -27,8 +27,10 @@ import {
   CheckCircle
 } from 'lucide-react'
 import { sanitizeInput, calculatePasswordStrength } from '../utils/security'
+import ObservabilityPanel from './ObservabilityPanel'
 
 function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
+  const [activeMainTab, setActiveMainTab] = useState('observability') // 'observability' | 'tasks'
   const [tasks, setTasks] = useState([])
   const [loadingTasks, setLoadingTasks] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -472,8 +474,35 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
           </div>
         </div>
 
-        {/* Database Setup Notice if table not created yet */}
-        {tableMissing && (
+        {/* Top-Level Navigation Switcher */}
+        <div className="main-tab-bar">
+          <button
+            type="button"
+            className={`main-tab-btn ${activeMainTab === 'observability' ? 'active' : ''}`}
+            onClick={() => setActiveMainTab('observability')}
+          >
+            <Activity size={16} />
+            <span>Observability & Tracing Lab</span>
+            <span className="tab-pill-live">OTel</span>
+          </button>
+
+          <button
+            type="button"
+            className={`main-tab-btn ${activeMainTab === 'tasks' ? 'active' : ''}`}
+            onClick={() => setActiveMainTab('tasks')}
+          >
+            <ListTodo size={16} />
+            <span>Tasks Workspace</span>
+            <span className="tab-count-badge">{tasks.length}</span>
+          </button>
+        </div>
+
+        {activeMainTab === 'observability' ? (
+          <ObservabilityPanel user={session?.user || { id: userId, email: userEmail }} />
+        ) : (
+          <>
+            {/* Database Setup Notice if table not created yet */}
+            {tableMissing && (
           <div className="db-setup-banner">
             <AlertCircle size={20} style={{ flexShrink: 0 }} />
             <div className="db-setup-text">
@@ -887,6 +916,8 @@ function Dashboard({ session, user, onLogout, theme, toggleTheme }) {
             </div>
           </div>
         </div>
+        </>
+        )}
       </div>
 
       {/* 🛡️ Change Password Modal Dialog */}

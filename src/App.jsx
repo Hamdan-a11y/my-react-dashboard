@@ -96,15 +96,37 @@ function App() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // 🧪 Support Instant Observability Demo Session
+  const [demoSession, setDemoSession] = useState(() => {
+    const saved = localStorage.getItem('demo_session')
+    return saved ? JSON.parse(saved) : null
+  })
+
+  const handleDemoLogin = () => {
+    const demo = {
+      user: {
+        id: 'demo-engineer-42',
+        email: 'engineer@observability.local',
+        user_metadata: { full_name: 'Observability Engineer' },
+        created_at: new Date().toISOString(),
+        last_sign_in_at: new Date().toISOString(),
+      },
+    }
+    localStorage.setItem('demo_session', JSON.stringify(demo))
+    setDemoSession(demo)
+  }
+
   // 3. Real Cloud Logout
   const handleLogout = async () => {
+    localStorage.removeItem('demo_session')
+    setDemoSession(null)
     await supabase.auth.signOut()
     setIsPasswordRecovery(false)
     setInitialError('')
   }
 
   // ✨ Polished Splash / Loading Screen (No blank/flashing page)
-  if (loading) {
+  if (loading && !demoSession) {
     return (
       <div className="splash-container">
         <div className="splash-glow"></div>
@@ -126,17 +148,19 @@ function App() {
     )
   }
 
+  const effectiveSession = session || demoSession
+
   // Get the user's name from cloud metadata or fallback to email
   const userName =
-    session?.user?.user_metadata?.full_name ||
-    session?.user?.email?.split('@')[0] ||
+    effectiveSession?.user?.user_metadata?.full_name ||
+    effectiveSession?.user?.email?.split('@')[0] ||
     'User'
 
   return (
     <div>
-      {session && !isPasswordRecovery ? (
+      {effectiveSession && !isPasswordRecovery ? (
         <Dashboard
-          session={session}
+          session={effectiveSession}
           user={userName}
           onLogout={handleLogout}
           theme={theme}
@@ -148,6 +172,7 @@ function App() {
           initialError={initialError}
           theme={theme}
           toggleTheme={toggleTheme}
+          onDemoLogin={handleDemoLogin}
           onPasswordResetComplete={() => {
             setIsPasswordRecovery(false)
             setInitialError('')

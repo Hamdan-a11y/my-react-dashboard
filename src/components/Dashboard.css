@@ -1220,3 +1220,84 @@
     justify-content: center;
   }
 }
+
+/* ==========================================================================
+   Top Navigation Tabs (Observability Lab vs Tasks Workspace)
+   ========================================================================== */
+.main-tab-bar {
+  display: inline-flex;
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  padding: 4px;
+  border-radius: 12px;
+  gap: 6px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme='dark'] .main-tab-bar {
+  background: #181c24;
+  border-color: #2e3646;
+}
+
+.main-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #64748b);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+}
+
+.main-tab-btn:hover {
+  color: var(--text-primary, #0f172a);
+}
+
+[data-theme='dark'] .main-tab-btn:hover {
+  color: #f8fafc;
+}
+
+.main-tab-btn.active {
+  background: #6366f1;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.tab-pill-live {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.main-tab-btn:not(.active) .tab-pill-live {
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366f1;
+}
+
+.tab-count-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='dark'] .tab-count-badge {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.main-tab-btn.active .tab-count-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
